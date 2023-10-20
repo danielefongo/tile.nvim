@@ -8,6 +8,8 @@ tile.__index = tile
 tile.opts = {
   horizontal = 4,
   vertical = 2,
+  min_width = 1,
+  min_height = 1,
 }
 
 local function leaf(win)
@@ -121,6 +123,10 @@ resize_left = function(win_ids, win_id, current_node)
   local pos = get_pos(current_node or leaf(win_id))
   local win_spec = get_win_spec(win_id)
 
+  if not pos then
+    return
+  end
+
   if pos.kind == ROW then
     if pos.idx == pos.last_idx then
       for idx = pos.idx - 1, 1, -1 do
@@ -141,6 +147,10 @@ end
 resize_right = function(win_ids, win_id, node)
   local pos = get_pos(node or leaf(win_id))
   local win_spec = get_win_spec(win_id)
+
+  if not pos then
+    return
+  end
 
   if pos.kind == ROW then
     if pos.idx == pos.last_idx then
@@ -163,6 +173,10 @@ resize_up = function(win_ids, win_id, node)
   local pos = get_pos(node or leaf(win_id))
   local win_spec = get_win_spec(win_id)
 
+  if not pos then
+    return
+  end
+
   if pos.kind == COL then
     if pos.idx == pos.last_idx then
       for idx = pos.idx - 1, 1, -1 do
@@ -183,6 +197,10 @@ end
 resize_down = function(win_ids, win_id, node)
   local pos = get_pos(node or leaf(win_id))
   local win_spec = get_win_spec(win_id)
+
+  if not pos then
+    return
+  end
 
   if pos.kind == COL then
     if pos.idx == pos.last_idx then
