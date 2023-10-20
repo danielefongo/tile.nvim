@@ -126,7 +126,7 @@ resize_left = function(win_ids, win_id, current_node)
       for idx = pos.idx - 1, 1, -1 do
         local sibling_spec = get_node_spec(pos.parent[2][idx])
 
-        if sibling_spec.width > 1 then
+        if sibling_spec.row_space > 0 then
           return v.nvim_win_set_width(0, win_spec.width + clamp(tile.opts.horizontal, sibling_spec.row_space))
         end
       end
@@ -173,7 +173,7 @@ resize_up = function(win_ids, win_id, node)
         end
       end
     else
-      v.nvim_win_set_height(0, win_spec.height - tile.opts.horizontal)
+      v.nvim_win_set_height(0, win_spec.height - tile.opts.vertical)
     end
   else
     resize_up(win_ids, win_id, pos.parent)
@@ -186,7 +186,7 @@ resize_down = function(win_ids, win_id, node)
 
   if pos.kind == COL then
     if pos.idx == pos.last_idx then
-      v.nvim_win_set_height(0, win_spec.height - tile.opts.horizontal)
+      v.nvim_win_set_height(0, win_spec.height - tile.opts.vertical)
     else
       for idx = pos.idx + 1, pos.last_idx, 1 do
         local sibling_spec = get_node_spec(pos.parent[2][idx])
