@@ -119,7 +119,7 @@ local resize_right
 local resize_down
 local resize_up
 
-resize_left = function(win_ids, win_id, current_node)
+resize_left = function(win_id, current_node)
   local pos = get_pos(current_node or leaf(win_id))
   local win_spec = get_win_spec(win_id)
 
@@ -140,11 +140,11 @@ resize_left = function(win_ids, win_id, current_node)
       v.nvim_win_set_width(0, win_spec.width - tile.opts.horizontal)
     end
   else
-    resize_left(win_ids, win_id, pos.parent)
+    resize_left(win_id, pos.parent)
   end
 end
 
-resize_right = function(win_ids, win_id, node)
+resize_right = function(win_id, node)
   local pos = get_pos(node or leaf(win_id))
   local win_spec = get_win_spec(win_id)
 
@@ -165,11 +165,11 @@ resize_right = function(win_ids, win_id, node)
       end
     end
   else
-    resize_right(win_ids, win_id, pos.parent)
+    resize_right(win_id, pos.parent)
   end
 end
 
-resize_up = function(win_ids, win_id, node)
+resize_up = function(win_id, node)
   local pos = get_pos(node or leaf(win_id))
   local win_spec = get_win_spec(win_id)
 
@@ -190,11 +190,11 @@ resize_up = function(win_ids, win_id, node)
       v.nvim_win_set_height(0, win_spec.height - tile.opts.vertical)
     end
   else
-    resize_up(win_ids, win_id, pos.parent)
+    resize_up(win_id, pos.parent)
   end
 end
 
-resize_down = function(win_ids, win_id, node)
+resize_down = function(win_id, node)
   local pos = get_pos(node or leaf(win_id))
   local win_spec = get_win_spec(win_id)
 
@@ -215,24 +215,24 @@ resize_down = function(win_ids, win_id, node)
       end
     end
   else
-    resize_down(win_ids, win_id, pos.parent)
+    resize_down(win_id, pos.parent)
   end
 end
 
 function tile.resize_left()
-  resize_left(v.nvim_list_wins(), v.nvim_get_current_win())
+  resize_left(v.nvim_get_current_win())
 end
 
 function tile.resize_right()
-  resize_right(v.nvim_list_wins(), v.nvim_get_current_win())
+  resize_right(v.nvim_get_current_win())
 end
 
 function tile.resize_up()
-  resize_up(v.nvim_list_wins(), v.nvim_get_current_win())
+  resize_up(v.nvim_get_current_win())
 end
 
 function tile.resize_down()
-  resize_down(v.nvim_list_wins(), v.nvim_get_current_win())
+  resize_down(v.nvim_get_current_win())
 end
 
 function tile.setup(opts)
