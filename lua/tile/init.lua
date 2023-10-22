@@ -1,12 +1,7 @@
 local v = vim.api
 local tile = {}
 tile.__index = tile
-tile.opts = {
-  horizontal = 4,
-  vertical = 2,
-  min_width = 1,
-  min_height = 1,
-}
+tile.opts = { horizontal = 4, vertical = 2 }
 
 local node = require("tile.node")
 
@@ -127,6 +122,48 @@ resize_down = function(leaf_node, current_node)
   end
 end
 
+local function split_win(win, opts)
+  vim.cmd(
+    string.format(
+      "noautocmd keepjumps %dwindo %s %s",
+      v.nvim_win_get_number(win),
+      opts.after and "belowright" or "aboveleft",
+      opts.vertical and "vsp" or "sp"
+    )
+  )
+
+  return v.nvim_get_current_win()
+end
+
+local function split_move_win(win, destination_win, opts)
+  vim.fn.win_splitmove(win, destination_win, {
+    rightbelow = opts.after,
+    vertical = opts.vertical,
+  })
+end
+
+local function move_node(current_node, destination_win, opts)
+  if not current_node then
+    return
+  end
+
+  if current_node.type ~= "leaf" then
+    local tmp_win = split_win(destination_win, { after = opts.after, vertical = opts.vertical })
+    for _, child in pairs(current_node.children) do
+      move_node(child, tmp_win, {
+        after = false,
+        vertical = current_node.type ~= "col",
+        ignore = opts.ignore,
+      })
+    end
+    v.nvim_win_close(tmp_win, true)
+  else
+    if current_node.win ~= destination_win and current_node.win ~= opts.ignore then
+      split_move_win(current_node.win, destination_win, opts)
+    end
+  end
+end
+
 function tile.resize_left()
   resize_left(node.find_win(v.nvim_get_current_win(), node.build()))
 end
@@ -141,6 +178,162 @@ end
 
 function tile.resize_down()
   resize_down(node.find_win(v.nvim_get_current_win(), node.build()))
+end
+
+function tile.shift_left()
+  local win_node = node.find_win(v.nvim_get_current_win(), node.build())
+  local parent_node = win_node.parent()
+
+  if parent_node.type == "row" then
+    if win_node.idx == win_node.last_idx and #parent_node.children == 2 and parent_node.children[1].type == "leaf" then
+      split_move_win(win_node.win, parent_node.children[1].win, { after = false, vertical = true })
+    elseif win_node.idx == 1 then
+      local tmp_win = split_win(win_node.win, { after = true, vertical = true })
+      local grandparent = parent_node.parent()
+      move_node(grandparent, tmp_win, {
+        after = false,
+        vertical = false,
+        ignore = win_node.win,
+      })
+      v.nvim_win_close(tmp_win, true)
+      v.nvim_set_current_win(win_node.win)
+    else
+      local tmp_win = split_win(win_node.win, { after = false, vertical = true })
+      move_node(parent_node.children[win_node.idx - 1], tmp_win, {
+        after = false,
+        vertical = false,
+        ignore = win_node.win,
+      })
+      v.nvim_win_close(win_node.win, true)
+      v.nvim_set_current_win(tmp_win)
+    end
+  else
+    local tmp_win = split_win(win_node.win, { after = true, vertical = true })
+    move_node(parent_node, tmp_win, {
+      after = false,
+      vertical = false,
+      ignore = win_node.win,
+    })
+    v.nvim_win_close(tmp_win, true)
+    v.nvim_set_current_win(win_node.win)
+  end
+end
+
+function tile.shift_right()
+  local win_node = node.find_win(v.nvim_get_current_win(), node.build())
+  local parent_node = win_node.parent()
+
+  if parent_node.type == "row" then
+    if win_node.idx == 1 and #parent_node.children == 2 and parent_node.children[2].type == "leaf" then
+      split_move_win(win_node.win, parent_node.children[2].win, { after = true, vertical = true })
+    elseif win_node.idx == win_node.last_idx then
+      local tmp_win = split_win(win_node.win, { after = false, vertical = true })
+      local grandparent = parent_node.parent()
+      move_node(grandparent, tmp_win, {
+        after = false,
+        vertical = false,
+        ignore = win_node.win,
+      })
+      v.nvim_win_close(tmp_win, true)
+      v.nvim_set_current_win(win_node.win)
+    else
+      local tmp_win = split_win(win_node.win, { after = true, vertical = true })
+      move_node(parent_node.children[win_node.idx + 1], tmp_win, {
+        after = true,
+        vertical = false,
+        ignore = win_node.win,
+      })
+      v.nvim_win_close(win_node.win, true)
+      v.nvim_set_current_win(tmp_win)
+    end
+  else
+    local tmp_win = split_win(win_node.win, { after = false, vertical = true })
+    move_node(parent_node, tmp_win, {
+      after = false,
+      vertical = false,
+      ignore = win_node.win,
+    })
+    v.nvim_win_close(tmp_win, true)
+    v.nvim_set_current_win(win_node.win)
+  end
+end
+
+function tile.shift_up()
+  local win_node = node.find_win(v.nvim_get_current_win(), node.build())
+  local parent_node = win_node.parent()
+
+  if parent_node.type == "col" then
+    if win_node.idx == win_node.last_idx and #parent_node.children == 2 and parent_node.children[1].type == "leaf" then
+      split_move_win(win_node.win, parent_node.children[1].win, { after = false, vertical = false })
+    elseif win_node.idx == 1 then
+      local tmp_win = split_win(win_node.win, { after = true, vertical = false })
+      local grandparent = parent_node.parent()
+      move_node(grandparent, tmp_win, {
+        after = false,
+        vertical = true,
+        ignore = win_node.win,
+      })
+      v.nvim_win_close(tmp_win, true)
+      v.nvim_set_current_win(win_node.win)
+    else
+      local tmp_win = split_win(win_node.win, { after = false, vertical = false })
+      move_node(parent_node.children[win_node.idx - 1], tmp_win, {
+        after = false,
+        vertical = true,
+        ignore = win_node.win,
+      })
+      v.nvim_win_close(win_node.win, true)
+      v.nvim_set_current_win(tmp_win)
+    end
+  else
+    local tmp_win = split_win(win_node.win, { after = true, vertical = false })
+    move_node(parent_node, tmp_win, {
+      after = false,
+      vertical = true,
+      ignore = win_node.win,
+    })
+    v.nvim_win_close(tmp_win, true)
+    v.nvim_set_current_win(win_node.win)
+  end
+end
+
+function tile.shift_down()
+  local win_node = node.find_win(v.nvim_get_current_win(), node.build())
+  local parent_node = win_node.parent()
+
+  if parent_node.type == "col" then
+    if win_node.idx == 1 and #parent_node.children == 2 and parent_node.children[2].type == "leaf" then
+      split_move_win(win_node.win, parent_node.children[2].win, { after = true, vertical = false })
+    elseif win_node.idx == win_node.last_idx then
+      local tmp_win = split_win(win_node.win, { after = false, vertical = false })
+      local grandparent = parent_node.parent()
+      move_node(grandparent, tmp_win, {
+        after = false,
+        vertical = true,
+        ignore = win_node.win,
+      })
+      v.nvim_win_close(tmp_win, true)
+      v.nvim_set_current_win(win_node.win)
+    else
+      local tmp_win = split_win(win_node.win, { after = true, vertical = false })
+      move_node(parent_node.children[win_node.idx + 1], tmp_win, {
+        after = true,
+        vertical = true,
+        ignore = win_node.win,
+      })
+      v.nvim_win_close(win_node.win, true)
+      v.nvim_set_current_win(tmp_win)
+    end
+  else
+    local tmp_win = split_win(win_node.win, { after = false, vertical = false })
+    move_node(parent_node, tmp_win, {
+      after = false,
+      vertical = true,
+      ignore = win_node.win,
+    })
+    v.nvim_win_close(tmp_win, true)
+    v.nvim_set_current_win(win_node.win)
+  end
 end
 
 function tile.setup(opts)
