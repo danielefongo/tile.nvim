@@ -165,24 +165,47 @@ local function move_node(current_node, destination_win, opts)
 end
 
 function tile.resize_left()
-  resize_left(node.find_win(v.nvim_get_current_win(), node.build()))
+  local win_node = node.find_win(v.nvim_get_current_win(), node.build())
+  if not win_node then
+    return
+  end
+  resize_left(win_node)
 end
 
 function tile.resize_right()
-  resize_right(node.find_win(v.nvim_get_current_win(), node.build()))
+  local win_node = node.find_win(v.nvim_get_current_win(), node.build())
+  if not win_node then
+    return
+  end
+  resize_right(win_node)
 end
 
 function tile.resize_up()
-  resize_up(node.find_win(v.nvim_get_current_win(), node.build()))
+  local win_node = node.find_win(v.nvim_get_current_win(), node.build())
+  if not win_node then
+    return
+  end
+  resize_up(win_node)
 end
 
 function tile.resize_down()
-  resize_down(node.find_win(v.nvim_get_current_win(), node.build()))
+  local win_node = node.find_win(v.nvim_get_current_win(), node.build())
+  if not win_node then
+    return
+  end
+  resize_down(win_node)
 end
 
 function tile.shift_left()
   local win_node = node.find_win(v.nvim_get_current_win(), node.build())
+  if not win_node then
+    return
+  end
+
   local parent_node = win_node.parent()
+  if not parent_node then
+    return
+  end
 
   if parent_node.type == "row" then
     if win_node.idx == win_node.last_idx and #parent_node.children == 2 and parent_node.children[1].type == "leaf" then
@@ -221,7 +244,14 @@ end
 
 function tile.shift_right()
   local win_node = node.find_win(v.nvim_get_current_win(), node.build())
+  if not win_node then
+    return
+  end
+
   local parent_node = win_node.parent()
+  if not parent_node then
+    return
+  end
 
   if parent_node.type == "row" then
     if win_node.idx == 1 and #parent_node.children == 2 and parent_node.children[2].type == "leaf" then
@@ -260,7 +290,14 @@ end
 
 function tile.shift_up()
   local win_node = node.find_win(v.nvim_get_current_win(), node.build())
+  if not win_node then
+    return
+  end
+
   local parent_node = win_node.parent()
+  if not parent_node then
+    return
+  end
 
   if parent_node.type == "col" then
     if win_node.idx == win_node.last_idx and #parent_node.children == 2 and parent_node.children[1].type == "leaf" then
@@ -299,7 +336,14 @@ end
 
 function tile.shift_down()
   local win_node = node.find_win(v.nvim_get_current_win(), node.build())
+  if not win_node then
+    return
+  end
+
   local parent_node = win_node.parent()
+  if not parent_node then
+    return
+  end
 
   if parent_node.type == "col" then
     if win_node.idx == 1 and #parent_node.children == 2 and parent_node.children[2].type == "leaf" then
